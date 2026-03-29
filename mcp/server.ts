@@ -19,6 +19,7 @@ import { getProceduralGenerationTools, handleProceduralGeneration } from './tool
 import { getLayoutHelperTools, handleLayoutHelpers } from './tools/layout-helpers';
 import { getTerrainShapingTools, handleTerrainShaping } from './tools/terrain-shaping';
 import { getEditingTools, handleEditing } from './tools/editing';
+import { getCatalogPlacementTools, handleCatalogPlacement } from './tools/catalog-placement';
 import { getResources, readResource } from './resources/catalog';
 
 const stateManager = new MapStateManager();
@@ -37,34 +38,37 @@ const server = new Server(
   }
 );
 
-// Tool name -> handler category mapping
-const TOOL_HANDLERS: Record<string, string> = {};
+type ToolDef = { name: string; description: string; inputSchema: any };
 
-function registerTools(tools: Array<{ name: string }>, category: string) {
-  for (const tool of tools) {
-    TOOL_HANDLERS[tool.name] = category;
+/** Tool registry: single source of truth for tool categories, definitions, and handlers */
+const TOOL_REGISTRY: Array<{
+  category: string;
+  getTools: () => ToolDef[];
+  handle: (name: string, args: any) => any;
+}> = [
+  { category: 'map-management', getTools: getMapManagementTools, handle: (n, a) => handleMapManagement(n, a, stateManager, adapter) },
+  { category: 'object-placement', getTools: getObjectPlacementTools, handle: (n, a) => handleObjectPlacement(n, a, stateManager, adapter) },
+  { category: 'hole-design', getTools: getHoleDesignTools, handle: (n, a) => handleHoleDesign(n, a, stateManager, adapter) },
+  { category: 'validation', getTools: getValidationTools, handle: (n, a) => handleValidation(n, a, stateManager) },
+  { category: 'procedural-generation', getTools: getProceduralGenerationTools, handle: (n, a) => handleProceduralGeneration(n, a, stateManager, adapter) },
+  { category: 'layout-helpers', getTools: getLayoutHelperTools, handle: (n, a) => handleLayoutHelpers(n, a, stateManager, adapter) },
+  { category: 'terrain-shaping', getTools: getTerrainShapingTools, handle: (n, a) => handleTerrainShaping(n, a, stateManager, adapter) },
+  { category: 'editing', getTools: getEditingTools, handle: (n, a) => handleEditing(n, a, stateManager) },
+  { category: 'catalog-placement', getTools: getCatalogPlacementTools, handle: (n, a) => handleCatalogPlacement(n, a, stateManager, adapter) },
+];
+
+const allTools = TOOL_REGISTRY.flatMap(r => r.getTools());
+
+/** Maps tool name to its registry entry for O(1) dispatch */
+const TOOL_DISPATCH: Record<string, (typeof TOOL_REGISTRY)[number]> = {};
+for (const entry of TOOL_REGISTRY) {
+  for (const tool of entry.getTools()) {
+    TOOL_DISPATCH[tool.name] = entry;
   }
 }
 
-const allTools = [
-  ...getMapManagementTools(),
-  ...getObjectPlacementTools(),
-  ...getHoleDesignTools(),
-  ...getValidationTools(),
-  ...getProceduralGenerationTools(),
-  ...getLayoutHelperTools(),
-  ...getTerrainShapingTools(),
-  ...getEditingTools(),
-];
-
-registerTools(getMapManagementTools(), 'map-management');
-registerTools(getObjectPlacementTools(), 'object-placement');
-registerTools(getHoleDesignTools(), 'hole-design');
-registerTools(getValidationTools(), 'validation');
-registerTools(getProceduralGenerationTools(), 'procedural-generation');
-registerTools(getLayoutHelperTools(), 'layout-helpers');
-registerTools(getTerrainShapingTools(), 'terrain-shaping');
-registerTools(getEditingTools(), 'editing');
+/** Tools that can be called without an active map */
+const NO_MAP_REQUIRED = new Set(['create_map', 'get_object_catalog', 'get_forest_catalog']);
 
 // List Tools
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -74,38 +78,18 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 // Call Tool
 server.setRequestHandler(CallToolRequestSchema, async (request): Promise<any> => {
   const { name, arguments: args } = request.params;
-  const category = TOOL_HANDLERS[name];
+  const entry = TOOL_DISPATCH[name];
 
-  if (!category) {
+  if (!entry) {
     return toolError(`Unknown tool: ${name}`);
   }
 
-  // All tools except create_map and get_object_catalog require an active map
-  if (!stateManager.hasMap() && name !== 'create_map' && name !== 'get_object_catalog') {
+  if (!stateManager.hasMap() && !NO_MAP_REQUIRED.has(name)) {
     return toolError('No map created yet. Call create_map first.');
   }
 
   try {
-    switch (category) {
-      case 'map-management':
-        return handleMapManagement(name, args || {}, stateManager, adapter);
-      case 'object-placement':
-        return handleObjectPlacement(name, args || {}, stateManager, adapter);
-      case 'hole-design':
-        return handleHoleDesign(name, args || {}, stateManager, adapter);
-      case 'validation':
-        return handleValidation(name, args || {}, stateManager);
-      case 'procedural-generation':
-        return handleProceduralGeneration(name, args || {}, stateManager, adapter);
-      case 'layout-helpers':
-        return handleLayoutHelpers(name, args || {}, stateManager, adapter);
-      case 'terrain-shaping':
-        return handleTerrainShaping(name, args || {}, stateManager, adapter);
-      case 'editing':
-        return handleEditing(name, args || {}, stateManager);
-      default:
-        return toolError(`Unknown category: ${category}`);
-    }
+    return entry.handle(name, args || {});
   } catch (error: any) {
     return toolError(`Error: ${error.message}`);
   }

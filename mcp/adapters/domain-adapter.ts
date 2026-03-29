@@ -10,7 +10,9 @@ import {
   GRID_SPACING,
   gridToWorld,
   DEFAULT_ELEVATION,
+  THEME_TO_GAME_NAME,
 } from '../state/types';
+import { findItem, CatalogItem } from '../catalog/forest-items';
 
 // Direction mapping: human-readable -> internal ramp codes
 // The internal codes describe which direction the ramp ascends FROM -> TO
@@ -90,7 +92,7 @@ export class DomainAdapter {
     return DIRECTION_TO_RAMP[dir];
   }
 
-  createFloor(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id'> {
+  createFloor(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     return {
       holeNumber,
@@ -99,13 +101,13 @@ export class DomainAdapter {
       pX: x, pY: elevation, pZ: z,
       rW: 1.0, rX: 0.0, rY: 0.0, rZ: 0.0,
       sX: 1.0, sY: 1.0, sZ: 1.0,
-      obName: `6x6_Base_${this.theme}`,
+      obName: `6x6_Base_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
       gridX, gridZ,
     };
   }
 
-  createHole(gridX: number, gridZ: number, elevation: number, holeNumber: number, hidden?: boolean): Omit<MapObject, 'id'> {
+  createHole(gridX: number, gridZ: number, elevation: number, holeNumber: number, hidden?: boolean): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     return {
       holeNumber,
@@ -114,14 +116,14 @@ export class DomainAdapter {
       pX: x, pY: elevation, pZ: z,
       rW: 1.0, rX: 0.0, rY: 0.0, rZ: 0.0,
       sX: 1.0, sY: 1.0, sZ: 1.0,
-      obName: `6x6HoleFlat_Base_${this.theme}`,
+      obName: `6x6HoleFlat_Base_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
       gridX, gridZ,
       hidden,
     };
   }
 
-  createSpawn(gridX: number, gridZ: number, elevation: number, holeNumber: number, par: number = 99): Omit<MapObject, 'id'> {
+  createSpawn(gridX: number, gridZ: number, elevation: number, holeNumber: number, par: number = 99): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     return {
       holeNumber,
@@ -133,12 +135,12 @@ export class DomainAdapter {
       obName: 'SingleSpawn',
       photonData: { photonViewID: [] },
       gridX, gridZ,
-      spawnName: `Spawn ${holeNumber}`,
+      spawnName: `Spawn${holeNumber}`,
       par,
     };
   }
 
-  createFlagpole(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id'> {
+  createFlagpole(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     return {
       holeNumber,
@@ -147,13 +149,13 @@ export class DomainAdapter {
       pX: x, pY: elevation - 1.0, pZ: z,  // Flagpole has -1.0 Y offset
       rW: 1.0, rX: 0.0, rY: 0.0, rZ: 0.0,
       sX: 1.0, sY: 1.0, sZ: 1.0,
-      obName: `FlagPole_${this.theme}`,
+      obName: `FlagPole_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
       gridX, gridZ,
     };
   }
 
-  createWallH(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id'> {
+  createWallH(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     return {
       holeNumber,
@@ -162,13 +164,13 @@ export class DomainAdapter {
       pX: x, pY: elevation, pZ: z,
       rW: 1.0, rX: 0.0, rY: 0.0, rZ: 0.0,
       sX: 1.0, sY: 2.0, sZ: 1.0,
-      obName: `1x6_Wall_${this.theme}`,
+      obName: `1x6_Wall_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
       gridX, gridZ,
     };
   }
 
-  createWallV(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id'> {
+  createWallV(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     return {
       holeNumber,
@@ -177,13 +179,13 @@ export class DomainAdapter {
       pX: x, pY: elevation, pZ: z,
       rW: 0.7071, rX: 0.0, rY: 0.7071, rZ: 0.0,
       sX: 1.0, sY: 2.0, sZ: 1.0,
-      obName: `1x6_Wall_${this.theme}`,
+      obName: `1x6_Wall_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
       gridX, gridZ,
     };
   }
 
-  createFoundationWallH(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id'> {
+  createFoundationWallH(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     return {
       holeNumber,
@@ -192,13 +194,13 @@ export class DomainAdapter {
       pX: x, pY: elevation, pZ: z,
       rW: 1.0, rX: 0.0, rY: 0.0, rZ: 0.0,
       sX: 1.0, sY: 1.0, sZ: 1.0,
-      obName: '6x6Foundation_Wall_Forest',  // Hardcoded Forest in original
+      obName: `6x6Foundation_Wall_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
       gridX, gridZ,
     };
   }
 
-  createFoundationWallV(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id'> {
+  createFoundationWallV(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     return {
       holeNumber,
@@ -207,13 +209,13 @@ export class DomainAdapter {
       pX: x, pY: elevation, pZ: z,
       rW: 0.7071, rX: 0.0, rY: 0.7071, rZ: 0.0,
       sX: 1.0, sY: 1.0, sZ: 1.0,
-      obName: '6x6Foundation_Wall_Forest',  // Hardcoded Forest in original
+      obName: `6x6Foundation_Wall_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
       gridX, gridZ,
     };
   }
 
-  createRamp2(gridX: number, gridZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id'> {
+  createRamp2(gridX: number, gridZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     const rampDir = DIRECTION_TO_RAMP[dir];
     const rot = RAMP2_ROTATIONS[rampDir];
@@ -224,13 +226,13 @@ export class DomainAdapter {
       pX: x, pY: elevation + 2, pZ: z,  // +2 Y offset
       rW: rot.rW, rX: 0.0, rY: rot.rY, rZ: 0.0,
       sX: 1.0, sY: 1.0, sZ: 1.0,
-      obName: '6x6Ramp+2_Base_Forest',  // Hardcoded Forest
+      obName: `6x6Ramp+2_Base_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
       gridX, gridZ,
     };
   }
 
-  createRamp2FoundationWall(worldX: number, worldZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id'> {
+  createRamp2FoundationWall(worldX: number, worldZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const rampDir = DIRECTION_TO_RAMP[dir];
     const rot = RAMP2_ROTATIONS[rampDir];
     return {
@@ -240,12 +242,12 @@ export class DomainAdapter {
       pX: worldX, pY: elevation - 1, pZ: worldZ,  // -1 Y offset
       rW: rot.rW, rX: 0.0, rY: rot.rY, rZ: 0.0,
       sX: 1.0, sY: 1.0, sZ: 1.0,
-      obName: '6x6+2Foundation_Wall_Forest',  // Hardcoded Forest
+      obName: `6x6+2Foundation_Wall_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
     };
   }
 
-  createRamp2Wall(worldX: number, worldZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id'> {
+  createRamp2Wall(worldX: number, worldZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const rampDir = DIRECTION_TO_RAMP[dir];
     const rot = RAMP2WALL_ROTATIONS[rampDir];
     return {
@@ -255,12 +257,12 @@ export class DomainAdapter {
       pX: worldX, pY: elevation, pZ: worldZ,
       rW: rot.rW, rX: 0.0, rY: rot.rY, rZ: 0.0,
       sX: 1.0, sY: 1.0, sZ: 1.0,
-      obName: '1x6Ramp+2_Wall_Forest',  // Hardcoded Forest
+      obName: `1x6Ramp+2_Wall_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
     };
   }
 
-  createSRamp2(gridX: number, gridZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id'> {
+  createSRamp2(gridX: number, gridZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     const rampDir = DIRECTION_TO_RAMP[dir];
     const rot = SRAMP2_ROTATIONS[rampDir];
@@ -271,13 +273,13 @@ export class DomainAdapter {
       pX: x, pY: elevation, pZ: z,
       rW: rot.rW, rX: 0.0, rY: rot.rY, rZ: 0.0,
       sX: 1.0, sY: 1.0, sZ: 1.0,
-      obName: '6x6_S-ramp_Forest',  // Hardcoded Forest
+      obName: `6x6_S-ramp_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
       gridX, gridZ,
     };
   }
 
-  createSRamp2FoundationWall(worldX: number, worldZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id'> {
+  createSRamp2FoundationWall(worldX: number, worldZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const rampDir = DIRECTION_TO_RAMP[dir];
     const rot = SRAMP2FW_ROTATIONS[rampDir];
     return {
@@ -292,7 +294,7 @@ export class DomainAdapter {
     };
   }
 
-  createLargeSCurve3(gridX: number, gridZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id'> {
+  createLargeSCurve3(gridX: number, gridZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     const rampDir = DIRECTION_TO_RAMP[dir];
     const rot = RAMP2_ROTATIONS[rampDir]; // Same rotation mapping as Ramp2
@@ -303,13 +305,13 @@ export class DomainAdapter {
       pX: x, pY: elevation, pZ: z,
       rW: rot.rW, rX: 0.0, rY: rot.rY, rZ: 0.0,
       sX: 1.0, sY: 1.0, sZ: 1.0,
-      obName: 'Large_SCurve_Forest',  // Hardcoded Forest
+      obName: `Large_SCurve_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
       gridX, gridZ,
     };
   }
 
-  createLargeSCurve3FoundationWall(worldX: number, worldZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id'> {
+  createLargeSCurve3FoundationWall(worldX: number, worldZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const rampDir = DIRECTION_TO_RAMP[dir];
     const rot = RAMP2_ROTATIONS[rampDir];
     return {
@@ -319,12 +321,12 @@ export class DomainAdapter {
       pX: worldX, pY: elevation - 1, pZ: worldZ,
       rW: rot.rW, rX: 0.0, rY: rot.rY, rZ: 0.0,
       sX: 1.0, sY: 1.0, sZ: 1.0,
-      obName: 'Large_SCurve_Forest_Foundation',
+      obName: `Large_SCurve_${this.getGameThemeName()}_Foundation`,
       photonData: { photonViewID: [] },
     };
   }
 
-  createHalfRamp(gridX: number, gridZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id'> {
+  createHalfRamp(gridX: number, gridZ: number, elevation: number, dir: Direction, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     const rampDir = DIRECTION_TO_RAMP[dir];
     const rot = RAMP2_ROTATIONS[rampDir];
@@ -341,7 +343,7 @@ export class DomainAdapter {
     };
   }
 
-  createDropdownTube(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id'> {
+  createDropdownTube(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     return {
       holeNumber,
@@ -350,13 +352,13 @@ export class DomainAdapter {
       pX: x, pY: elevation, pZ: z,
       rW: 1.0, rX: 0.0, rY: 0.0, rZ: 0.0,
       sX: 1.0, sY: 1.0, sZ: 1.0,
-      obName: `6x6_DropdownTube_${this.theme}`,
+      obName: `6x6_DropdownTube_${this.getGameThemeName()}`,
       photonData: { photonViewID: [] },
       gridX, gridZ,
     };
   }
 
-  createWater(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id'> {
+  createWater(gridX: number, gridZ: number, elevation: number, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     return {
       holeNumber,
@@ -371,7 +373,7 @@ export class DomainAdapter {
     };
   }
 
-  createTrap(gridX: number, gridZ: number, elevation: number, trapType: TrapType, holeNumber: number, orientation?: WallOrientation): Omit<MapObject, 'id'> {
+  createTrap(gridX: number, gridZ: number, elevation: number, trapType: TrapType, holeNumber: number, orientation?: WallOrientation): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     const def = TRAP_DEFS[trapType];
 
@@ -399,21 +401,83 @@ export class DomainAdapter {
   }
 
   // Place a wall on a specific side of a tile
-  createWallOnSide(gridX: number, gridZ: number, side: Direction, elevation: number, holeNumber: number): Omit<MapObject, 'id'> {
+  createWallOnSide(gridX: number, gridZ: number, side: Direction, elevation: number, holeNumber: number): Omit<MapObject, 'id' | 'uid'> {
     const { x, z } = gridToWorld(gridX, gridZ);
     const halfGrid = GRID_SPACING / 2; // 3
 
     switch (side) {
       case 'north':
         return this.createWallH(gridX, gridZ, elevation, holeNumber);
-        // WallH is placed with pZ offset +3 for north side
       case 'south':
-        return { ...this.createWallH(gridX, gridZ, elevation, holeNumber), pZ: z - halfGrid } as any;
+        return { ...this.createWallH(gridX, gridZ, elevation, holeNumber), pZ: z - halfGrid };
       case 'east':
-        return { ...this.createWallV(gridX, gridZ, elevation, holeNumber), pX: x + halfGrid } as any;
+        return { ...this.createWallV(gridX, gridZ, elevation, holeNumber), pX: x + halfGrid };
       case 'west':
-        return { ...this.createWallV(gridX, gridZ, elevation, holeNumber), pX: x - halfGrid } as any;
+        return { ...this.createWallV(gridX, gridZ, elevation, holeNumber), pX: x - halfGrid };
     }
+  }
+
+  /** Get the game-internal theme name (e.g. 'CandyLand' for 'Candy') */
+  getGameThemeName(): string {
+    return THEME_TO_GAME_NAME[this.theme];
+  }
+
+  /**
+   * Generic factory: create any item from the catalog by obName.
+   * Handles themed name substitution, default scales, y-offsets, and photonData.
+   */
+  createCatalogItem(
+    obName: string,
+    gridX: number,
+    gridZ: number,
+    elevation: number,
+    holeNumber: number,
+    options?: {
+      rotation?: { rW: number; rX: number; rY: number; rZ: number };
+      scale?: { sX: number; sY: number; sZ: number };
+    }
+  ): Omit<MapObject, 'id' | 'uid'> {
+    const catalogItem = findItem(obName);
+    const { x, z } = gridToWorld(gridX, gridZ);
+
+    // Resolve the actual obName (apply theme suffix if needed)
+    let resolvedObName = obName;
+    if (catalogItem?.themed) {
+      // Replace theme suffix in the obName with the current theme
+      const gameName = this.getGameThemeName();
+      resolvedObName = obName.replace(/_(Forest|CandyLand|Oasis|Space|Pirate|Haunted)$/, `_${gameName}`);
+      // Handle items like "Longramp_forest" (lowercase)
+      resolvedObName = resolvedObName.replace(/_(forest|candyland|oasis|space|pirate|haunted)$/, `_${gameName.toLowerCase()}`);
+    }
+
+    const yOffset = catalogItem?.yOffset ?? 0;
+    const defaultScale = catalogItem?.defaultScale ?? { sX: 1, sY: 1, sZ: 1 };
+    const sType = catalogItem?.sType ?? 0;
+    const photonViewID = catalogItem?.photonViewID ? [...catalogItem.photonViewID] : [];
+
+    const rot = options?.rotation ?? { rW: 1.0, rX: 0.0, rY: 0.0, rZ: 0.0 };
+    const scale = options?.scale ?? defaultScale;
+
+    return {
+      holeNumber,
+      type: 'catalogItem',
+      sType,
+      pX: x,
+      pY: elevation + yOffset,
+      pZ: z,
+      rW: rot.rW,
+      rX: rot.rX,
+      rY: rot.rY,
+      rZ: rot.rZ,
+      sX: scale.sX,
+      sY: scale.sY,
+      sZ: scale.sZ,
+      obName: resolvedObName,
+      photonData: { photonViewID },
+      gridX,
+      gridZ,
+      catalogCategory: catalogItem?.category,
+    };
   }
 
   // Create a ramp with its foundation walls (matching terrain builder logic)
@@ -425,10 +489,10 @@ export class DomainAdapter {
     holeNumber: number,
     rampType: RampType = 'ramp2',
     includeWalls: boolean = false
-  ): Omit<MapObject, 'id'>[] {
+  ): Omit<MapObject, 'id' | 'uid'>[] {
     const { x, z } = gridToWorld(gridX, gridZ);
     const halfGrid = GRID_SPACING / 2;
-    const result: Omit<MapObject, 'id'>[] = [];
+    const result: Omit<MapObject, 'id' | 'uid'>[] = [];
 
     switch (rampType) {
       case 'ramp2': {
@@ -438,8 +502,6 @@ export class DomainAdapter {
         if (dir === 'north' || dir === 'south') {
           result.push(this.createRamp2FoundationWall(x - halfGrid, z, elevation, dir, holeNumber));
           result.push(this.createRamp2FoundationWall(x + halfGrid, z, elevation, dir, holeNumber));
-          // Foundation wall at the low end
-          const lowEndZ = dir === 'north' ? z - halfGrid : z + halfGrid;
           result.push(this.createFoundationWallH(gridX, gridZ, elevation, holeNumber));
           if (includeWalls) {
             result.push(this.createRamp2Wall(x - halfGrid, z, elevation, dir, holeNumber));
@@ -448,7 +510,6 @@ export class DomainAdapter {
         } else {
           result.push(this.createRamp2FoundationWall(x, z - halfGrid, elevation, dir, holeNumber));
           result.push(this.createRamp2FoundationWall(x, z + halfGrid, elevation, dir, holeNumber));
-          const lowEndX = dir === 'east' ? x + halfGrid : x - halfGrid;
           result.push(this.createFoundationWallV(gridX, gridZ, elevation, holeNumber));
           if (includeWalls) {
             result.push(this.createRamp2Wall(x, z - halfGrid, elevation, dir, holeNumber));

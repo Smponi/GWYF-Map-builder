@@ -46,16 +46,16 @@ function refineWallType(obj: GWYFEditorObject, type: ObjectType): ObjectType {
   return type;
 }
 
-function parseGeneratorOutput(jsonString: string, holeNumber: number, startId: number): { objects: Omit<MapObject, 'id'>[]; nextId: number } {
+function parseGeneratorOutput(jsonString: string, holeNumber: number, startId: number): { objects: Omit<MapObject, 'id' | 'uid'>[]; nextId: number } {
   const parsed = JSON.parse(jsonString);
   const editorData: GWYFEditorObject[] = parsed.editorObjectData;
-  const objects: Omit<MapObject, 'id'>[] = [];
+  const objects: Omit<MapObject, 'id' | 'uid'>[] = [];
 
   for (const obj of editorData) {
     let type = inferType(obj.obName, obj.sType);
     type = refineWallType(obj, type);
 
-    const mapObj: Omit<MapObject, 'id'> = {
+    const mapObj: Omit<MapObject, 'id' | 'uid'> = {
       holeNumber,
       type,
       sType: obj.sType,
@@ -94,7 +94,7 @@ export function generateMaze(params: {
   wallStacks?: number;
   elevation?: number;
   includeSpawnAndHole?: boolean;
-}): Omit<MapObject, 'id'>[] {
+}): Omit<MapObject, 'id' | 'uid'>[] {
   // Save and restore Global state
   const savedGlobal = {
     theme: Global.theme,
@@ -144,7 +144,7 @@ export function generateTerrain(params: {
   steepness?: number;
   wallStacks?: number;
   water?: boolean;
-}): Omit<MapObject, 'id'>[] {
+}): Omit<MapObject, 'id' | 'uid'>[] {
   const savedGlobal = {
     theme: Global.theme,
     type: Global.type,

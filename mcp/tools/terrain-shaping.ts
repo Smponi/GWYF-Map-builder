@@ -89,7 +89,7 @@ export function handleTerrainShaping(
     }
 
     case 'create_bridge': {
-      const objects: Omit<MapObject, 'id'>[] = [];
+      const objects: Omit<MapObject, 'id' | 'uid'>[] = [];
       const bridgeElev = args.elevation;
       const groundElev = args.groundElevation ?? DEFAULT_ELEVATION;
 

@@ -1,7 +1,19 @@
+import { randomUUID } from 'crypto';
+
 export type Direction = 'north' | 'south' | 'east' | 'west';
 export type RampDirection = 'RL' | 'DT' | 'LR' | 'TD';
 export type Theme = 'Forest' | 'Oasis' | 'Space' | 'Pirate' | 'Haunted' | 'Candy';
 export type WallOrientation = 'H' | 'V';
+
+/** Maps user-facing theme names to the game's internal theme names */
+export const THEME_TO_GAME_NAME: Record<Theme, string> = {
+  Forest: 'Forest',
+  Oasis: 'Oasis',
+  Space: 'Space',
+  Pirate: 'Pirate',
+  Haunted: 'Haunted',
+  Candy: 'CandyLand',
+};
 
 export type TrapType =
   | 'flipgate'
@@ -36,10 +48,12 @@ export type ObjectType =
   | 'halfRamp'
   | 'dropdownTube'
   | 'water'
+  | 'catalogItem'
   | TrapType;
 
 export interface MapObject {
   id: number;
+  uid: string;
   holeNumber: number;
   type: ObjectType;
   sType: number;
@@ -60,6 +74,12 @@ export interface MapObject {
   spawnName?: string;
   par?: number;
   hidden?: boolean;
+  /** Original catalog category (for catalogItem type) */
+  catalogCategory?: string;
+}
+
+export function generateUid(): string {
+  return randomUUID();
 }
 
 export interface MapState {
@@ -81,10 +101,16 @@ export interface GWYFMapJson {
   publishedID: number;
   music: number;
   skybox: number;
+  visibleTerrain: boolean;
+  directionalLightSettings: string;
+  ambientLightSettings: string;
+  selectionGroupsSettings: string;
+  version: number;
   editorObjectData: GWYFEditorObject[];
 }
 
 export interface GWYFEditorObject {
+  uid: string;
   sType: number;
   pX: number;
   pY: number;
@@ -101,6 +127,12 @@ export interface GWYFEditorObject {
   spawnName?: string;
   par?: number;
 }
+
+/** Default light settings matching the game's defaults */
+export const DEFAULT_DIRECTIONAL_LIGHT = '0|0.6666667|1|1|1|1|50|326';
+export const DEFAULT_AMBIENT_LIGHT = '0.4|0.4|0.4|1';
+export const DEFAULT_SELECTION_GROUPS = '';
+export const MAP_VERSION = 1;
 
 export interface ToolResult {
   content: Array<{ type: 'text'; text: string }>;

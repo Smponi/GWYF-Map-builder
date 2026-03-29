@@ -121,7 +121,7 @@ export function handleLayoutHelpers(
 
   switch (toolName) {
     case 'place_floor_rect': {
-      const objects: Omit<MapObject, 'id'>[] = [];
+      const objects: Omit<MapObject, 'id' | 'uid'>[] = [];
       for (let x = 0; x < args.width; x++) {
         for (let z = 0; z < args.height; z++) {
           objects.push(adapter.createFloor(args.startGridX + x, args.startGridZ + z, elevation, holeNumber));
@@ -141,7 +141,7 @@ export function handleLayoutHelpers(
     case 'place_wall_line': {
       const dir = args.direction as Direction;
       const side = args.side as Direction;
-      const objects: Omit<MapObject, 'id'>[] = [];
+      const objects: Omit<MapObject, 'id' | 'uid'>[] = [];
       const halfGrid = GRID_SPACING / 2;
 
       for (let i = 0; i < args.length; i++) {
@@ -174,7 +174,7 @@ export function handleLayoutHelpers(
     }
 
     case 'place_walls_around_rect': {
-      const objects: Omit<MapObject, 'id'>[] = [];
+      const objects: Omit<MapObject, 'id' | 'uid'>[] = [];
       const openings = new Set<string>();
       if (args.openings) {
         for (const o of args.openings) {
@@ -236,7 +236,7 @@ export function handleLayoutHelpers(
       const waypoints: Array<{ gridX: number; gridZ: number }> = args.waypoints;
       const pathWidth = args.width ?? 1;
       const placed = new Set<string>();
-      const objects: Omit<MapObject, 'id'>[] = [];
+      const objects: Omit<MapObject, 'id' | 'uid'>[] = [];
 
       for (let i = 0; i < waypoints.length - 1; i++) {
         const linePoints = bresenhamLine(waypoints[i].gridX, waypoints[i].gridZ, waypoints[i + 1].gridX, waypoints[i + 1].gridZ);

@@ -6,6 +6,12 @@ import {
   Theme,
   ObjectType,
   DEFAULT_ELEVATION,
+  generateUid,
+  THEME_TO_GAME_NAME,
+  DEFAULT_DIRECTIONAL_LIGHT,
+  DEFAULT_AMBIENT_LIGHT,
+  DEFAULT_SELECTION_GROUPS,
+  MAP_VERSION,
 } from './types';
 
 export class MapStateManager {
@@ -47,20 +53,20 @@ export class MapStateManager {
     return this.state !== null;
   }
 
-  addObject(obj: Omit<MapObject, 'id'>): MapObject {
+  addObject(obj: Omit<MapObject, 'id' | 'uid'>): MapObject {
     const state = this.getState();
-    const mapObj: MapObject = { ...obj, id: this.nextId++ };
+    const mapObj: MapObject = { ...obj, id: this.nextId++, uid: generateUid() };
     state.undoStack.push([{ ...mapObj }]);
     state.objects.push(mapObj);
     return mapObj;
   }
 
-  addObjects(objs: Omit<MapObject, 'id'>[]): MapObject[] {
+  addObjects(objs: Omit<MapObject, 'id' | 'uid'>[]): MapObject[] {
     const state = this.getState();
     const added: MapObject[] = [];
     const undoBatch: MapObject[] = [];
     for (const obj of objs) {
-      const mapObj: MapObject = { ...obj, id: this.nextId++ };
+      const mapObj: MapObject = { ...obj, id: this.nextId++, uid: generateUid() };
       state.objects.push(mapObj);
       added.push(mapObj);
       undoBatch.push({ ...mapObj });
@@ -135,6 +141,7 @@ export class MapStateManager {
 
     const editorObjectData: GWYFEditorObject[] = state.objects.map((obj) => {
       const editorObj: GWYFEditorObject = {
+        uid: obj.uid,
         sType: obj.sType,
         pX: obj.pX,
         pY: obj.pY,
@@ -164,6 +171,11 @@ export class MapStateManager {
       publishedID: 0,
       music: state.music,
       skybox: state.skybox,
+      visibleTerrain: true,
+      directionalLightSettings: DEFAULT_DIRECTIONAL_LIGHT,
+      ambientLightSettings: DEFAULT_AMBIENT_LIGHT,
+      selectionGroupsSettings: DEFAULT_SELECTION_GROUPS,
+      version: MAP_VERSION,
       editorObjectData,
     };
 
